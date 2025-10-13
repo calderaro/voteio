@@ -336,7 +336,7 @@ export default function VotePage() {
           <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/80 backdrop-blur-sm rounded-full shadow-sm border border-blue-200/50">
             <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
             <span className="text-sm font-medium text-gray-700">
-              Presupuesto por casa:{" "}
+              Presupuesto:{" "}
               <span className="font-bold text-blue-600">
                 ${parseFloat(list?.budget || "0").toFixed(2)}
               </span>

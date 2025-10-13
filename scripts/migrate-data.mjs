@@ -23,6 +23,70 @@ async function migrate() {
   console.log("Starting migration from old database to new database...")
 
   try {
+    // 1. Users
+    const userIdMap = new Map()
+
+    const oldUsers = await oldDb`
+      SELECT
+        id,
+        email,
+        COALESCE("emailVerified", false) AS "emailVerified",
+        name,
+        "createdAt",
+        "updatedAt"
+      FROM users
+    `
+
+    console.log(`Found ${oldUsers.length} users in old database`)
+
+    for (const user of oldUsers) {
+      const [existingById] = await newDb`
+        SELECT id FROM users WHERE id = ${user.id}
+      `
+
+      if (existingById) {
+        userIdMap.set(user.id, existingById.id)
+        continue
+      }
+
+      const [existingByEmail] = await newDb`
+        SELECT id FROM users WHERE email = ${user.email}
+      `
+
+      if (existingByEmail) {
+        await newDb`
+          UPDATE users
+          SET
+            "emailVerified" = ${user.emailVerified},
+            name = ${user.name},
+            "updatedAt" = ${user.updatedAt}
+          WHERE id = ${existingByEmail.id}
+        `
+        userIdMap.set(user.id, existingByEmail.id)
+        continue
+      }
+
+      await newDb`
+        INSERT INTO users (
+          id,
+          email,
+          "emailVerified",
+          name,
+          "createdAt",
+          "updatedAt"
+        )
+        VALUES (
+          ${user.id},
+          ${user.email},
+          ${user.emailVerified},
+          ${user.name},
+          ${user.createdAt},
+          ${user.updatedAt}
+        )
+      `
+      userIdMap.set(user.id, user.id)
+    }
+
     const oldLists = await oldDb`
       SELECT
         id,
@@ -37,6 +101,9 @@ async function migrate() {
     console.log(`Found ${oldLists.length} lists in old database`)
 
     for (const list of oldLists) {
+      const mappedCreatedBy =
+        list.createdBy && userIdMap.get(list.createdBy)
+
       await newDb`
         INSERT INTO lists (
           id,
@@ -52,7 +119,7 @@ async function migrate() {
           ${list.budget},
           ${list.createdAt},
           ${list.isClosed},
-          ${list.createdBy}
+          ${mappedCreatedBy ?? null}
         )
         ON CONFLICT (id) DO UPDATE SET
           name = EXCLUDED.name,
