@@ -1,20 +1,74 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { authClient } from "@/lib/auth/client";
+
+type ErrorInfo = {
+  message: string;
+  hints: string[];
+  rawMessage?: string;
+};
 
 export default function AdminLoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState("");
+  const [error, setError] = useState<ErrorInfo | null>(null);
   const router = useRouter();
+
+  const buildErrorDetails = useMemo(
+    () =>
+      function buildErrorDetails(rawMessage?: string): ErrorInfo {
+        const normalized = rawMessage?.toLowerCase() ?? "";
+        const hints = new Set<string>();
+
+        if (
+          normalized.includes("credential") ||
+          normalized.includes("password") ||
+          normalized.includes("invalid")
+        ) {
+          hints.add("Double-check the email and password you entered.");
+          hints.add("If you recently reset your password, use the newest one.");
+        }
+
+        if (normalized.includes("rate") || normalized.includes("attempt")) {
+          hints.add("Too many attempts can trigger a temporary lockout. Wait a minute before trying again.");
+        }
+
+        if (normalized.includes("user") && normalized.includes("not")) {
+          hints.add("Ask an administrator to confirm that your account exists and is active.");
+        }
+
+        if (hints.size === 0) {
+          hints.add("Double-check your credentials and try again.");
+          hints.add("If the problem persists, contact an administrator for help.");
+        }
+
+        let friendlyMessage = "We couldn’t sign you in.";
+        if (normalized.includes("invalid")) {
+          friendlyMessage = "Those credentials didn’t match our records.";
+        } else if (normalized.includes("password")) {
+          friendlyMessage = "The password you entered looks incorrect.";
+        } else if (normalized.includes("email")) {
+          friendlyMessage = "We had trouble with that email address.";
+        } else if (rawMessage?.trim()) {
+          friendlyMessage = rawMessage.trim();
+        }
+
+        return {
+          message: friendlyMessage,
+          hints: Array.from(hints),
+          rawMessage: rawMessage?.trim(),
+        };
+      },
+    []
+  );
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    setError("");
+    setError(null);
 
     try {
       const result = await authClient.signIn.email({
@@ -23,12 +77,14 @@ export default function AdminLoginPage() {
       });
 
       if (result.error) {
-        setError(result.error.message || "Login failed");
+        setError(buildErrorDetails(result.error.message));
       } else {
         router.push("/admin");
       }
-    } catch {
-      setError("An error occurred during login");
+    } catch (err) {
+      const fallbackMessage =
+        err instanceof Error ? err.message : "An unexpected error occurred.";
+      setError(buildErrorDetails(fallbackMessage));
     } finally {
       setIsLoading(false);
     }
@@ -82,7 +138,21 @@ export default function AdminLoginPage() {
           </div>
 
           {error && (
-            <div className="text-red-600 text-sm text-center">{error}</div>
+            <div className="rounded-md border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+              <p className="font-medium">{error.message}</p>
+              {error.hints.length > 0 && (
+                <ul className="mt-2 list-disc space-y-1 pl-5">
+                  {error.hints.map((hint, index) => (
+                    <li key={index}>{hint}</li>
+                  ))}
+                </ul>
+              )}
+              {error.rawMessage && error.rawMessage !== error.message && (
+                <p className="mt-2 text-xs text-red-600/80">
+                  Technical details: {error.rawMessage}
+                </p>
+              )}
+            </div>
           )}
 
           <div>
