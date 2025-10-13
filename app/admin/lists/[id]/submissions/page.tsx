@@ -15,7 +15,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { List, Vote, VoteItem } from "@/lib/types";
+import { List, Vote } from "@/lib/types";
 
 export default function SubmissionsPage() {
   const params = useParams();
@@ -45,9 +45,9 @@ export default function SubmissionsPage() {
           return;
         }
 
-        setList(listData as any);
-        setVotes(votesData as any);
-      } catch (err) {
+        setList(listData as List);
+        setVotes(votesData as Vote[]);
+      } catch {
         setError("Failed to load submissions data");
       } finally {
         setIsLoading(false);
@@ -165,9 +165,9 @@ export default function SubmissionsPage() {
         unitPrice: number;
       };
     } = {};
-    let totalParticipants = votes.length;
+    const totalParticipants = votes.length;
     let totalSpent = 0;
-    let totalBudget = parseFloat(list?.budget || "0") * totalParticipants;
+    const totalBudget = parseFloat(list?.budget || "0") * totalParticipants;
     const budgetPerHouse = parseFloat(list?.budget || "0");
 
     votes.forEach((vote) => {
@@ -220,7 +220,9 @@ export default function SubmissionsPage() {
     let recommendedTotal = 0;
 
     sortedItemsForRecommendation.forEach((item) => {
-      const price = item.unitPrice || (item.totalQuantity ? item.totalCost / item.totalQuantity : 0);
+      const price =
+        item.unitPrice ||
+        (item.totalQuantity ? item.totalCost / item.totalQuantity : 0);
       if (price <= 0) return;
       if (recommendedTotal + price <= budgetPerHouse + 1e-6) {
         recommendedItems.push({
@@ -491,7 +493,7 @@ export default function SubmissionsPage() {
           <CardTitle>Recommended Shopping List</CardTitle>
           <CardDescription>
             Top-voted items that fit within the per-house budget. Combined
-            spending from all submissions: {" "}
+            spending from all submissions:{" "}
             {formatCurrency(stats.totalSpent.toString())}
           </CardDescription>
         </CardHeader>
@@ -518,13 +520,17 @@ export default function SubmissionsPage() {
               </div>
               <div className="space-y-2 rounded-xl border bg-muted/40 p-4 text-sm">
                 <div className="flex items-center justify-between">
-                  <span className="text-muted-foreground">Recommended total</span>
+                  <span className="text-muted-foreground">
+                    Recommended total
+                  </span>
                   <span className="font-semibold text-foreground">
                     {formatCurrency(stats.recommendedTotal.toString())}
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-muted-foreground">Remaining budget</span>
+                  <span className="text-muted-foreground">
+                    Remaining budget
+                  </span>
                   <span className="font-semibold text-foreground">
                     {formatCurrency(stats.remainingBudget.toString())}
                   </span>

@@ -11,7 +11,7 @@ export default function AdminLayout({
   children: React.ReactNode;
 }) {
   const [isLoading, setIsLoading] = useState(true);
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<{ name?: string } | null>(null);
   const router = useRouter();
 
   useEffect(() => {
@@ -23,7 +23,7 @@ export default function AdminLayout({
         } else {
           router.push("/login");
         }
-      } catch (error) {
+      } catch {
         router.push("/login");
       } finally {
         setIsLoading(false);

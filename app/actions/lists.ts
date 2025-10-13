@@ -1,7 +1,7 @@
 "use server";
 
 import { db } from "@/lib/db";
-import { lists, items } from "@/lib/db/schema";
+import { lists } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { generateId } from "@/lib/utils";
 
@@ -30,9 +30,16 @@ export async function updateList(
   data: { name?: string; budget?: number; isClosed?: boolean }
 ) {
   try {
-    const updateData: any = { ...data };
+    const updateData: { name?: string; budget?: string; isClosed?: boolean } =
+      {};
+    if (data.name !== undefined) {
+      updateData.name = data.name;
+    }
     if (data.budget !== undefined) {
       updateData.budget = data.budget.toString();
+    }
+    if (data.isClosed !== undefined) {
+      updateData.isClosed = data.isClosed;
     }
     await db.update(lists).set(updateData).where(eq(lists.id, id));
     return { success: true };

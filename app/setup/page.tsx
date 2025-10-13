@@ -29,7 +29,7 @@ export default function SetupPage() {
       } else {
         router.push("/admin");
       }
-    } catch (err) {
+    } catch {
       setError("An error occurred during setup");
     } finally {
       setIsLoading(false);

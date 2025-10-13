@@ -71,12 +71,12 @@ export default function EditListPage() {
           return;
         }
 
-        setList(listData as any);
+        setList(listData as List);
         setListName(listData.name);
         setBudget(listData.budget);
         setIsClosed(listData.isClosed ?? false);
-        setItems(itemsData as any);
-      } catch (err) {
+        setItems(itemsData as Item[]);
+      } catch {
         setError("Failed to load list data");
       } finally {
         setIsLoading(false);
@@ -106,7 +106,7 @@ export default function EditListPage() {
       } else {
         setError(result.error || "Failed to update list");
       }
-    } catch (err) {
+    } catch {
       setError("An error occurred while updating the list");
     } finally {
       setIsSaving(false);
@@ -154,7 +154,7 @@ export default function EditListPage() {
             (url: unknown): url is string => typeof url === "string"
           )
         : [];
-      const uniqueImages = Array.from(new Set(fetchedImages));
+      const uniqueImages = Array.from(new Set(fetchedImages)) as string[];
 
       setNewItem({
         ...newItem,
@@ -164,7 +164,7 @@ export default function EditListPage() {
             ? product.price.toString()
             : newItem.price,
         description: product.description || newItem.description,
-        imageUrl: uniqueImages[0] ?? newItem.imageUrl,
+        imageUrl: (uniqueImages[0] || newItem.imageUrl) as string,
         imageUrls: uniqueImages.length ? uniqueImages : newItem.imageUrls,
       });
 
@@ -224,7 +224,7 @@ export default function EditListPage() {
             (url: unknown): url is string => typeof url === "string"
           )
         : [];
-      const uniqueImages = Array.from(new Set(fetchedImages));
+      const uniqueImages = Array.from(new Set(fetchedImages)) as string[];
 
       const updatedItems = items.map((i) =>
         i.id === itemId
@@ -236,7 +236,7 @@ export default function EditListPage() {
                   ? product.price.toString()
                   : i.price,
               description: product.description || i.description,
-              imageUrl: uniqueImages[0] ?? i.imageUrl,
+              imageUrl: (uniqueImages[0] || i.imageUrl) as string | undefined,
               imageUrls: uniqueImages.length ? uniqueImages : i.imageUrls,
             }
           : i
@@ -281,7 +281,7 @@ export default function EditListPage() {
       if (result.success) {
         // Refresh items
         const itemsData = await getItemsByListId(listId);
-        setItems(itemsData as any);
+        setItems(itemsData as Item[]);
         setNewItem({
           name: "",
           price: "",
@@ -294,7 +294,7 @@ export default function EditListPage() {
       } else {
         setError(result.error || "Failed to create item");
       }
-    } catch (err) {
+    } catch {
       setError("An error occurred while creating the item");
     }
   };
@@ -313,13 +313,13 @@ export default function EditListPage() {
       if (result.success) {
         // Refresh items
         const itemsData = await getItemsByListId(listId);
-        setItems(itemsData as any);
+        setItems(itemsData as Item[]);
         setEditingItem(null);
         setError("");
       } else {
         setError(result.error || "Failed to update item");
       }
-    } catch (err) {
+    } catch {
       setError("An error occurred while updating the item");
     }
   };
@@ -332,12 +332,12 @@ export default function EditListPage() {
       if (result.success) {
         // Refresh items
         const itemsData = await getItemsByListId(listId);
-        setItems(itemsData as any);
+        setItems(itemsData as Item[]);
         setError("");
       } else {
         setError(result.error || "Failed to delete item");
       }
-    } catch (err) {
+    } catch {
       setError("An error occurred while deleting the item");
     }
   };
@@ -609,8 +609,8 @@ export default function EditListPage() {
                 </button>
               </div>
               <p className="mt-1 text-xs text-gray-500">
-                Paste a Mercado Libre product URL and click "Fetch Data" to
-                automatically fill in the details.
+                Paste a Mercado Libre product URL and click &quot;Fetch
+                Data&quot; to automatically fill in the details.
               </p>
             </div>
             <div>
