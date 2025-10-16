@@ -478,8 +478,7 @@ export default function SubmissionsPage() {
                   </span>
                 </div>
                 <div className="text-sm text-gray-500">
-                  {item.votes} votes • {item.totalQuantity} total •{" "}
-                  {formatCurrency(item.totalCost.toString())}
+                  {item.votes} votes • {item.totalQuantity} total
                 </div>
               </div>
             ))}
@@ -490,11 +489,9 @@ export default function SubmissionsPage() {
       {/* Recommended Shopping List */}
       <Card className="mb-8">
         <CardHeader>
-          <CardTitle>Recommended Shopping List</CardTitle>
+          <CardTitle>Lista de Compra Recomendada</CardTitle>
           <CardDescription>
-            Top-voted items that fit within the per-house budget. Combined
-            spending from all submissions:{" "}
-            {formatCurrency(stats.totalSpent.toString())}
+            Artículos más votados que encajan dentro del presupuesto por casa.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
