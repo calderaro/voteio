@@ -69,7 +69,7 @@ export default function SubmissionsPage() {
     return () => clearTimeout(timer);
   }, [feedbackMessage]);
 
-  const handleCopyLink = async () => {
+  async function handleCopyLink() {
     if (!shareLink) return;
     try {
       setIsCopying(true);
@@ -86,7 +86,7 @@ export default function SubmissionsPage() {
     } finally {
       setIsCopying(false);
     }
-  };
+  }
 
   const handleDeleteList = async () => {
     if (!list) return;
