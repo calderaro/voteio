@@ -2,7 +2,7 @@
 
 import { db } from "@/lib/db";
 import { votes, voteItems, items, lists } from "@/lib/db/schema";
-import { eq, and } from "drizzle-orm";
+import { eq, and, inArray } from "drizzle-orm";
 import { generateId } from "@/lib/utils";
 
 export async function submitVote(
@@ -114,30 +114,53 @@ export async function getVotesByListId(listId: string) {
       .from(votes)
       .where(eq(votes.listId, listId));
 
-    // Get vote items for each vote
-    const votesWithItems = await Promise.all(
-      votesData.map(async (vote) => {
-        const voteItemsData = await db
-          .select({
-            id: voteItems.id,
-            quantity: voteItems.quantity,
-            itemId: voteItems.itemId,
-            itemName: items.name,
-            itemPrice: items.price,
-            itemImageUrl: items.imageUrl,
-          })
-          .from(voteItems)
-          .innerJoin(items, eq(voteItems.itemId, items.id))
-          .where(eq(voteItems.voteId, vote.id));
+    if (!votesData.length) {
+      return [];
+    }
 
-        return {
-          ...vote,
-          items: voteItemsData,
-        };
+    const voteItemsData = await db
+      .select({
+        id: voteItems.id,
+        voteId: voteItems.voteId,
+        quantity: voteItems.quantity,
+        itemId: voteItems.itemId,
+        itemName: items.name,
+        itemPrice: items.price,
+        itemImageUrl: items.imageUrl,
+        itemMercadoLibreUrl: items.mercadoLibreUrl,
       })
-    );
+      .from(voteItems)
+      .innerJoin(items, eq(voteItems.itemId, items.id))
+      .where(
+        inArray(
+          voteItems.voteId,
+          votesData.map((vote) => vote.id)
+        )
+      );
 
-    return votesWithItems;
+    const itemsByVoteId: Record<
+      string,
+      Array<(typeof voteItemsData)[number]>
+    > = {};
+
+    voteItemsData.forEach((item) => {
+      if (!item.voteId) {
+        return;
+      }
+      if (!itemsByVoteId[item.voteId]) {
+        itemsByVoteId[item.voteId] = [];
+      }
+      itemsByVoteId[item.voteId].push(item);
+    });
+
+    return votesData.map((vote) => ({
+      ...vote,
+      items: (itemsByVoteId[vote.id] ?? []).map((item) => {
+        const { voteId, ...rest } = item;
+        void voteId;
+        return rest;
+      }),
+    }));
   } catch (error) {
     console.error("Error fetching votes:", error);
     return [];

@@ -163,6 +163,7 @@ export default function SubmissionsPage() {
         totalCost: number;
         votes: number;
         unitPrice: number;
+        mercadoLibreUrl: string | null;
       };
     } = {};
     const totalParticipants = votes.length;
@@ -184,6 +185,7 @@ export default function SubmissionsPage() {
               totalCost: 0,
               votes: 0,
               unitPrice: 0,
+              mercadoLibreUrl: item.itemMercadoLibreUrl ?? null,
             };
           }
           itemCounts[key].totalQuantity += item.quantity;
@@ -192,6 +194,9 @@ export default function SubmissionsPage() {
           itemCounts[key].votes += 1;
           if (!itemCounts[key].unitPrice) {
             itemCounts[key].unitPrice = parseFloat(item.itemPrice);
+          }
+          if (!itemCounts[key].mercadoLibreUrl && item.itemMercadoLibreUrl) {
+            itemCounts[key].mercadoLibreUrl = item.itemMercadoLibreUrl;
           }
         });
       }
@@ -216,6 +221,7 @@ export default function SubmissionsPage() {
       name: string;
       unitPrice: number;
       votes: number;
+      mercadoLibreUrl: string | null;
     }[] = [];
     let recommendedTotal = 0;
 
@@ -230,6 +236,7 @@ export default function SubmissionsPage() {
           name: item.name,
           unitPrice: price,
           votes: item.votes,
+          mercadoLibreUrl: item.mercadoLibreUrl,
         });
         recommendedTotal += price;
       }
@@ -501,7 +508,7 @@ export default function SubmissionsPage() {
                 {stats.recommendedItems.map((item) => (
                   <div
                     key={item.id}
-                    className="flex items-center justify-between rounded-lg border bg-muted/40 px-3 py-2 text-sm"
+                    className="flex flex-wrap items-center justify-between gap-2 rounded-lg border bg-muted/40 px-3 py-2 text-sm"
                   >
                     <span className="font-medium text-foreground">
                       {item.name}
@@ -509,9 +516,22 @@ export default function SubmissionsPage() {
                         {item.votes} votes
                       </span>
                     </span>
-                    <span className="font-semibold text-foreground">
-                      {formatCurrency(item.unitPrice.toString())}
-                    </span>
+                    <div className="flex items-center gap-2">
+                      <span className="font-semibold text-foreground">
+                        {formatCurrency(item.unitPrice.toString())}
+                      </span>
+                      {item.mercadoLibreUrl ? (
+                        <Button asChild size="sm" variant="outline">
+                          <a
+                            href={item.mercadoLibreUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                          >
+                            Ver en MercadoLibre
+                          </a>
+                        </Button>
+                      ) : null}
+                    </div>
                   </div>
                 ))}
               </div>

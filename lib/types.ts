@@ -53,6 +53,7 @@ export interface VoteItem {
   itemName: string;
   itemPrice: string;
   itemImageUrl: string | null;
+  itemMercadoLibreUrl?: string | null;
 }
 
 // Helper types for forms and UI
